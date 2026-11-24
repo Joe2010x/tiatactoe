@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tiatactoe
+  labels:
+    app.kubernetes.io/name: tiatactoe
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: tiatactoe
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+    - ports:
+        - port: 8080
+          protocol: TCP

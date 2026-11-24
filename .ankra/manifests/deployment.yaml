@@ -1,0 +1,90 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiatactoe
+  labels:
+    app.kubernetes.io/name: tiatactoe
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tiatactoe
+  labels:
+    app.kubernetes.io/name: tiatactoe
+  annotations:
+    ankra.io/generated: "true"
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tiatactoe
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tiatactoe
+    spec:
+      serviceAccountName: tiatactoe
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ankra-registry-pull
+      containers:
+        - name: tiatactoe
+          image: registry.ankra.cloud/org-5bb6a7a8-21d7-4fc1-bc1b-407dbf0e964b/tiatactoe:${{ ankra.image_tag }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ANKRA_RELEASE
+              value: "${{ ankra.image_tag }}"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            tcpSocket:
+              port: http
+            failureThreshold: 30
+            periodSeconds: 2
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: http
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+      volumes:
+        - name: tmp
+          emptyDir: {}
