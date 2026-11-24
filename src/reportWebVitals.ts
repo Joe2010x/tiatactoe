@@ -1,4 +1,6 @@
-import { ReportHandler } from 'web-vitals';
+// web-vitals 6.x no longer exports the ReportHandler type, so the callback
+// shape is declared here instead of imported from the package.
+type ReportHandler = (metric: unknown) => void;
 
 const reportWebVitals = (onPerfEntry?: ReportHandler) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
