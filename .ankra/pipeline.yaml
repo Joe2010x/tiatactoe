@@ -33,7 +33,7 @@ stages:
   - name: "test"
     kind: "run"
     image: "node:24-alpine"
-    run: "npm ci && npm test"
+    run: "npm ci && CI=true npm test -- --watchAll=false"
     needs:
       - "checkout"
     env:
